@@ -51,7 +51,7 @@ router.get('/',verify, async (req,res) =>{
     res.json(projects)
 })
 
-//Add Tags -- need to do (assumption, project id will be passes to this from front end)
+//Add Tags -- need to do (assumption, project id will be passed to this from front end)
 router.post('/addtags',verify, async (req,res)=>{
     
     const prof = await profile(req.user._id)
@@ -61,11 +61,14 @@ router.post('/addtags',verify, async (req,res)=>{
 
 
     Object.keys(req.body).forEach(async (tag)=>{
-        //Validation
-        if (tag !== "tag_proj_id"){            
-        const {error} = tagVal({"tag_name":req.body[tag]})
-        if (error) return res.status(400).send(error.details[0].message + `, The failed tag is ${req.body[tag]}`)
-        const create_tag = await conn('INSERT INTO KRONOS.TAG (tag_name,tag_proj_id) VALUES(?, ?);',[req.body[tag],req.body.tag_proj_id])
+
+        //Iteration over all tags
+        if (tag !== "tag_proj_id"){ 
+            //Tags validation           
+            const {error} = tagVal({"tag_name":req.body[tag]})
+            if (error) return res.status(400).send(error.details[0].message + `, The failed tag is ${req.body[tag]}`)
+            //Create Tag in tag table
+            const create_tag = await conn('INSERT INTO KRONOS.TAG (tag_name,tag_proj_id) VALUES(?, ?);',[req.body[tag],req.body.tag_proj_id])
         }
         //add tag
         
@@ -74,5 +77,7 @@ router.post('/addtags',verify, async (req,res)=>{
     res.send("recived Post")
 })
 
+
+//Add Media
 
 module.exports = router
