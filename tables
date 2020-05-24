@@ -1,0 +1,92 @@
+CREATE
+-- TEMPORARY
+TABLE KRONOS.USER
+-- AS query
+(
+    usr_id INTEGER NOT NULL AUTO_INCREMENT UNIQUE,
+    usr_email VARCHAR(60) NOT NULL UNIQUE,
+    usr_hash VARCHAR(255) NOT NULL,
+    usr_created_on DATETIME NOT NULL,
+    
+    PRIMARY KEY(usr_id, usr_email)
+
+)
+
+CREATE
+-- TEMPORARY
+TABLE KRONOS.PROFILE
+-- AS query
+(
+    prof_id INTEGER NOT NULL AUTO_INCREMENT UNIQUE PRIMARY KEY,
+    prof_firstname VARCHAR(30) NOT NULL,
+    prof_lastname VARCHAR(30) NOT NULL,
+    prof_usr_email VARCHAR(60) NOT NULL,
+    prof_bio TEXT NULL,
+    prof_gender CHAR(1) NOT NULL,
+    prof_dob DATE NOT NULL,
+    prof_image_loc VARCHAR(255) NULL,
+    prof_edu_fac VARCHAR(60) NULL,
+    prof_qualification VARCHAR(60) NULL,
+    prof_grad_year DATE NULL,
+    prof_is_grad BOOLEAN NULL,
+    prof_created_on DATETIME NOT NULL,
+    prof_usr_id INTEGER NOT NULL,
+    
+    FOREIGN KEY (prof_usr_id, prof_usr_email)
+      REFERENCES USER(usr_id, usr_email)
+      ON UPDATE CASCADE ON DELETE RESTRICT
+)
+
+CREATE
+-- TEMPORARY
+TABLE KRONOS.PROJECT
+-- AS query
+(
+    proj_id INTEGER NOT NULL AUTO_INCREMENT UNIQUE,
+    proj_name VARCHAR(60) NOT NULL,
+    proj_bio TEXT NULL,
+    proj_created_on DATE NOT NULL,
+    proj_prof_id INTEGER NOT NULL,
+    
+    PRIMARY KEY(proj_id),
+    FOREIGN KEY (proj_prof_id)
+      REFERENCES PROFILE(prof_id)
+      ON UPDATE CASCADE ON DELETE RESTRICT
+  
+)
+
+CREATE
+-- TEMPORARY
+TABLE KRONOS.TAG
+-- AS query
+(
+    tag_id INTEGER NOT NULL AUTO_INCREMENT UNIQUE,
+    tag_name VARCHAR(30) NOT NULL,
+    tag_proj_id INTEGER NOT NULL,
+    
+    PRIMARY KEY(tag_id),
+    FOREIGN KEY (tag_proj_id)
+      REFERENCES PROJECT(proj_id)
+      ON UPDATE CASCADE ON DELETE RESTRICT
+)
+
+
+CREATE
+-- TEMPORARY
+TABLE KRONOS.MEDIA
+-- AS query
+(
+    med_id INTEGER NOT NULL AUTO_INCREMENT UNIQUE,
+    med_location VARCHAR(255) NOT NULL,
+    med_title VARCHAR(30) NOT NULL,
+    med_descp TEXT NULL,
+    med_type VARCHAR(30) NOT NULL,
+    med_proj_id INTEGER NOT NULL,
+    
+    PRIMARY KEY(med_id),
+    FOREIGN KEY (med_proj_id)
+      REFERENCES PROJECT(proj_id)
+      ON UPDATE CASCADE ON DELETE RESTRICT
+    
+)
+

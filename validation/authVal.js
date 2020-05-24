@@ -1,11 +1,11 @@
-var Joi = require('joi')
+const Joi = require('joi')
 
 
 const signupVal = data =>{
     const schema ={
         prof_firstname: Joi.string().max(30).required(),
         prof_lastname: Joi.string().max(30).required(),
-        prof_usr_email: Joi.string().max(60).required(),
+        usr_email: Joi.string().max(60).required(),
         prof_gender: Joi.string().max(1).required(), 
         prof_bio: Joi.string(),
         prof_gender: Joi.string(), 
@@ -16,7 +16,7 @@ const signupVal = data =>{
         prof_grad_year: null,
         prof_is_grad: Joi.boolean(),
         prof_created_on: null,
-        prof_hash: Joi.string().required()
+        usr_hash: Joi.string().min(8).required()
 
 
     }
@@ -32,6 +32,16 @@ const loginVal = data =>{
 
    return  Joi.validate(data, schema)
 }
+    //     proj_id INTEGER NOT NULL AUTO_INCREMENT UNIQUE,
+    //     proj_name VARCHAR(60) NOT NULL,
+    //     proj_bio TEXT NULL,
+    //     proj_created_on DATE NOT NULL,
+    //     proj_prof_id INTEGER NOT NULL,
+
+
+
+
 
 module.exports.signupVal = signupVal
 module.exports.loginVal = loginVal
+

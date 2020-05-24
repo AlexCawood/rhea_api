@@ -10,30 +10,9 @@ const {signupVal, loginVal} = require('../validation/authVal')
 
 router.post('/signup', async (req,res)=>{
     // Validations
-    const schema ={
-        prof_firstname: Joi.string().max(30).required(),
-        prof_lastname: Joi.string().max(30).required(),
-        usr_email: Joi.string().max(60).required(),
-        prof_gender: Joi.string().max(1).required(), 
-        prof_bio: Joi.string(),
-        prof_gender: Joi.string(), 
-        prof_dob: Joi.string().min(10).max(10).required(),
-        prof_image_loc: null,
-        prof_edu_fac: null,
-        prof_qualification: null,
-        prof_grad_year: null,
-        prof_is_grad: Joi.boolean(),
-        prof_created_on: null,
-        usr_hash: Joi.string().required()
+    const {error} = signupVal(req.body)
 
-
-    }
-    const result = Joi.validate(req.body, schema)
-    if(result.error){
-        res.status(400).send(`Error: ${result.error}`)
-        console.log(result.error);
-        return
-    }
+    if (error) return res.status(400).send(error.details[0].message)
     
     //Check if email exists
     const user_count = await conn('SELECT COUNT(usr_email) AS user_count FROM KRONOS.USER WHERE usr_email = ?',[req.body.usr_email])
@@ -41,7 +20,7 @@ router.post('/signup', async (req,res)=>{
 
     //Hashing
     const salt = await bcrypt.genSalt(10)
-    const hashpass = await bcrypt.hash(req.body.prof_hash, salt)
+    const hashpass = await bcrypt.hash(req.body.usr_hash, salt)
     
     // Adding database users
     try {
@@ -112,7 +91,7 @@ router.post('/signin', async (req,res) =>{
         const valHash =  await bcrypt.compare(req.body.usr_hash,user[0].usr_hash)
         if(!valHash) return res.status(400).send('Invalid Password')
         
-        const token = jwt.sign({_id:user[0].usr_email}, process.env.TOKEN_SECRET)
+        const token = jwt.sign({_id:user[0].usr_id}, process.env.TOKEN_SECRET)
         res.header('auth-token',token).send(token)
 
         
