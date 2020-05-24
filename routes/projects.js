@@ -50,13 +50,28 @@ router.get('/',verify, async (req,res) =>{
 
     res.json(projects)
 })
+
 //Add Tags -- need to do (assumption, project id will be passes to this from front end)
 router.post('/addtags',verify, async (req,res)=>{
-    //validation
-    const {error} = tagVal(req.body)
-    if (error) return res.status(400).send(error.details[0].message)
-    //Add to databse
+    
     const prof = await profile(req.user._id)
+    if (!prof) return res.status(400).send('No Profile for user')
+    const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.tag_proj_id])
+    if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
+
+
+    Object.keys(req.body).forEach(async (tag)=>{
+        //Validation
+        if (tag !== "tag_proj_id"){            
+        const {error} = tagVal({"tag_name":req.body[tag]})
+        if (error) return res.status(400).send(error.details[0].message + `, The failed tag is ${req.body[tag]}`)
+        const create_tag = await conn('INSERT INTO KRONOS.TAG (tag_name,tag_proj_id) VALUES(?, ?);',[req.body[tag],req.body.tag_proj_id])
+        }
+        //add tag
+        
+
+    })
+    res.send("recived Post")
 })
 
 
