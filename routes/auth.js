@@ -91,7 +91,7 @@ router.post('/signin', async (req,res) =>{
         const valHash =  await bcrypt.compare(req.body.usr_hash,user[0].usr_hash)
         if(!valHash) return res.status(400).send('Invalid Password')
         
-        const token = jwt.sign({_id:user[0].usr_id}, process.env.TOKEN_SECRET)
+        const token = jwt.sign({_id:user[0].usr_id}, process.env.TOKEN_SECRET, {expiresIn:'12h'})
         res.header('auth-token',token).send(token)
 
         

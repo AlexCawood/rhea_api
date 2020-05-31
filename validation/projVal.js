@@ -24,10 +24,14 @@ const mediaVal = data =>{
         med_title:  Joi.string().max(30).required(),
         med_descp: Joi.string().optional(),
         med_type: Joi.string().max(30).required(),
+        med_position: Joi.required(),
+        med_proj_id: Joi.required()
     }
 
    return  Joi.validate(data, schema)
 }
+
+
 
 module.exports.tagVal = tagVal
 module.exports.projectVal = projectVal
