@@ -94,6 +94,15 @@ router.post('/addtags',verify, async (req,res)=>{
     res.send("recived Post")
 })
 
+router.get('/tags', verify, async (req,res)=>{
+    const prof = await profile(req.user._id)
+    if (!prof) return res.status(400).send('No Profile for user')
+    const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.tag_proj_id])
+    if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
+
+
+})
+
 // media
 // post to the media table
 router.post('/addmedia',verify, async (req,res)=>{
@@ -152,11 +161,11 @@ router.post('/addmedia',verify, async (req,res)=>{
 })
 
 // get from the media table
-router.get('/media',verify,async (req,res)=>{
+router.get('/media',verify, async (req,res)=>{
     const prof = await profile(req.user._id)
     if (!prof) return res.status(400).send('No Profile for user')
-    const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
-    if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
+    //const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
+    //if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
 
     const proj_id = await conn('SELECT proj_id FROM KRONOS.PROJECT WHERE proj_prof_id = ?',[req.user._id])
     if(!proj_id) return res.status(400).send('No projects found')
