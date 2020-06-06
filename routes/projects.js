@@ -107,35 +107,14 @@ router.get('/tags', verify, async (req,res)=>{
 // post to the media table
 router.post('/addmedia',verify, async (req,res)=>{
 
-    // {
-    //     "proj_id":10,
-    //     "med_media":[{
-    //         "med_location":"/media/project_name",
-    //         "med_title":"Test Post of image",
-    //         "med_descp":"The cat in the hat sat on the matt",
-    //         "med_type":"image",
-    //         "med_position":0,
-    //         "med_proj_id":10
-            
-    //     },{
-    //         "med_location":"/media/project_name",
-    //         "med_title":"Test 2 Post of image",
-    //         "med_descp":"The rat in the cat sat on the fat",
-    //         "med_type":"image",
-    //         "med_position":0,
-    //         "med_proj_id":10
-            
-    //     }]
-        
-    // }
-    
-    console.log(req.user._id);
-    
+    // gaurd for user exists
     const prof = await profile(req.user._id)
     if (!prof) return res.status(400).send('No Profile for user')
+    // gaurd check if project exists
     const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
     if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
 
+    // media data 
     const media_list = req.body.med_media
 
     media_list.map(async (media)=>{
@@ -147,11 +126,13 @@ router.post('/addmedia',verify, async (req,res)=>{
         let proj_name = await conn('SELECT proj_name FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
         console.log(proj_name[0].proj_name);
         
+        // generate the filename from project name, media title and the date
         proj_name = proj_name[0].proj_name.replace(/\s/g, "_").toLowerCase()
         let media_title = media.med_title.replace(/\s/g, "_").toLowerCase()
         let date_formatted = today_date().replace(/-/g, "")
         const media_name = `${proj_name}_${media_title}_${String(media.med_position)}_${date_formatted}`
 
+        //insert into data base
         const create_media = await conn(`INSERT INTO KRONOS.MEDIA (med_name,med_location, med_title, med_descp, med_type, med_position, med_proj_id,med_created_on) 
         VALUES(?,?,?,?,?,?,?,?);`,[media_name,media.med_location,media.med_title, media.med_descp, media.med_type, media.med_position, media.med_proj_id,today_date()])
         res.send("recived Post")
