@@ -12,7 +12,8 @@ const tagVal = data =>{
 const projectVal = data =>{
     const schema ={
         proj_name: Joi.string().required(),
-        proj_bio:  Joi.string().optional()
+        proj_bio:  Joi.string().optional(),
+        proj_prof_id: Joi.required()
     }
 
    return  Joi.validate(data, schema)

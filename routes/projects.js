@@ -1,4 +1,5 @@
 const router = require('express').Router()
+const multer = require('multer')
 const conn = require('../database')
 const verify = require('../verifyToken')
 const {projectVal, tagVal,mediaVal} = require('../validation/projVal')
@@ -15,9 +16,9 @@ const today_date = ()=>{
 // Check profile exists
 const profile = async (id) =>{
     const user = await conn('SELECT * FROM KRONOS.USER WHERE usr_id = ?',[id])
-    if (!user) return res.status(400).send('Access Denied')
+    if (!user[0]) return 
     const profile = await conn('SELECT * FROM KRONOS.PROFILE WHERE prof_usr_email = ?',[user[0].usr_email])
-    if (!profile) return res.status(400).send('Access Denied')
+    if (!profile) return 
     return profile
 }
 
@@ -31,17 +32,19 @@ router.post('/addproject',verify ,async (req,res)=>{
     //Save to Database
     try {
         const prof = await profile(req.user._id)
-        
+        const date = today_date()
         
         const insert_project = await conn(`
         INSERT INTO KRONOS.PROJECT (proj_name,proj_bio, proj_created_on, proj_prof_id)
-        VALUES(?,?,CURRENT_TIMESTAMP(),?)
+        VALUES(?,?,?,?)
         `,[
             req.body.proj_name,
             req.body.proj_bio,
+            date,
             prof[0].prof_id
         ])
-        res.send('Success');
+        project_id = await conn("SELECT proj_id FROM KRONOS.PROJECT WHERE proj_name = ? and proj_prof_id = ? and proj_created_on = ? ",[req.body.proj_name,prof[0].prof_id,date])
+        res.json( project_id[0]);
 
     } catch (error) {
         res.status(400).send('project not found')
@@ -52,16 +55,27 @@ router.post('/addproject',verify ,async (req,res)=>{
 
 
 })
-// Get the poject data
-router.get('/userprojects',verify, async (req,res) =>{
+// Get user poject data
+router.get('/all',verify, async (req,res) =>{
     const prof = await profile(req.user._id)
-    console.log(prof);
-    
+    if (!prof) return res.status(400).send('No Profile for user')
     const projects = await conn('SELECT * FROM KRONOS.PROJECT WHERE proj_prof_id = ?',[prof[0].prof_id])
     if(!projects) return res.status(400).send('No projects found')
 
     res.json(projects)
 })
+
+// Get user poject data by project ID
+router.get('/:id',verify, async (req,res) =>{
+    const prof = await profile(req.user._id)
+    if (!prof) return res.status(400).send('No Profile for user')
+    const projects = await conn('SELECT * FROM KRONOS.PROJECT WHERE proj_id = ?',[req.params.id])
+    if(!projects[0]) return res.status(400).send('No projects found')
+
+    res.json(projects)
+})
+
+// get all projects
 router.get('/', async (req,res) =>{
     
     const projects = await conn('SELECT * FROM KRONOS.PROJECT')
@@ -91,21 +105,53 @@ router.post('/addtags',verify, async (req,res)=>{
         }
 
     })
-    res.send("recived Post")
+    res.json({status:"success"})
 })
 
-router.get('/tags', verify, async (req,res)=>{
+router.get('/tags/:proj_id', verify, async (req,res)=>{
     const prof = await profile(req.user._id)
     if (!prof) return res.status(400).send('No Profile for user')
-    const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.tag_proj_id])
-    if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
 
+    //const proj = await conn('SELECT proj_id FROM KRONOS.PROJECT WHERE proj_prof_id = ?')
+    //const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.tag_proj_id])
+    //if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
+    const tags = await conn('SELECT * FROM KRONOS.TAG WHERE tag_proj_id = ?',[req.params.proj_id])
+    if (!tags[0]) return res.status(400).send("No Tags found")
 
+    res.send(tags)
 })
 
 // media
 // post to the media table
-router.post('/addmedia',verify, async (req,res)=>{
+
+// File variable decleration
+
+
+const storage = multer.diskStorage({
+    destination: async function  (req, file, cb) {
+        console.log(req.body.file_name);
+        
+        const media = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[req.body.file_name])
+        
+        
+        if (media[0]){ 
+            req.body.file_name = null
+            return cb('No file added', 'media/images')
+        }
+        cb(null, 'media/images')
+    },
+    filename: async function (req, file, cb) {
+        cb(null, req.body.file_name)
+    }
+  })
+
+  const upload = multer({ storage: storage })
+
+var middleware = {
+    verify: verify,
+    imageUpload: upload.single('image')
+}
+router.post('/addmedia',[middleware.verify], async (req,res)=>{
 
     // gaurd for user exists
     const prof = await profile(req.user._id)
@@ -123,26 +169,37 @@ router.post('/addmedia',verify, async (req,res)=>{
         const {error} = mediaVal(media)
         if (error) return res.status(400).send(error.details[0].message + `, The failed media is ${media.med_title}`)
 
-        let proj_name = await conn('SELECT proj_name FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
-        console.log(proj_name[0].proj_name);
+        // let proj_name = await conn('SELECT proj_name FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
+        //console.log(proj_name[0].proj_name);
         
         // generate the filename from project name, media title and the date
-        proj_name = proj_name[0].proj_name.replace(/\s/g, "_").toLowerCase()
+        let proj_id = String(req.body.proj_id)
         let media_title = media.med_title.replace(/\s/g, "_").toLowerCase()
         let date_formatted = today_date().replace(/-/g, "")
-        const media_name = `${proj_name}_${media_title}_${String(media.med_position)}_${date_formatted}`
-
+        const media_name = `${proj_id}_${media_title}_${String(media.med_position)}_${date_formatted}`
+        media['med_location'] = 'media/images'
         //insert into data base
         const create_media = await conn(`INSERT INTO KRONOS.MEDIA (med_name,med_location, med_title, med_descp, med_type, med_position, med_proj_id,med_created_on) 
         VALUES(?,?,?,?,?,?,?,?);`,[media_name,media.med_location,media.med_title, media.med_descp, media.med_type, media.med_position, media.med_proj_id,today_date()])
-        res.send("recived Post")
+        res.json({proj_id: proj_id,file_name: media_name})
     })
     
     
 })
 
+// saving the images with metadata
+router.post('/addmedia/image',[middleware.verify, middleware.imageUpload],(req,res)=>{
+    if (!req.body.file_name) return res.status(400).send('not image submited')
+    res.send("Image saved")
+})
+
+
+
 // get from the media table
-router.get('/media',verify, async (req,res)=>{
+router.get('/media',verify ,async (req,res)=>{
+    console.log(req.user);
+    
+    if (!req.user) return res.status(400).send('No user found')
     const prof = await profile(req.user._id)
     if (!prof) return res.status(400).send('No Profile for user')
     //const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
@@ -153,6 +210,8 @@ router.get('/media',verify, async (req,res)=>{
 
     const get_media = await conn('SELECT *  FROM KRONOS.MEDIA WHERE med_proj_id = ?',[proj_id[0].proj_id])
     if(!get_media) return res.status(400).send('No media found')
+
+    //multer
 
     res.json(get_media)
 })
