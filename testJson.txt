@@ -73,6 +73,35 @@
     ]
 }
 
+// Add image
+// http://localhost:5000/api/project/addmedia/image
+// has to be a form request. submit a form request for each image
+	- proj_id
+	- file_name
+	- image
+
 
 // Get Media
-// http://localhost:3000/api/project/media
+// http://localhost:5000/api/project/:id/media
+// ID is the project ID
+
+
+// Search Projects
+http://localhost:5000/api/project/search/:searchterm
+
+// Edit profile (PUT request)
+http://localhost:5000/api/profile/edit/:proj_id
+
+ {
+        "prof_firstname":"fred",
+           "prof_lastname": "manson",
+           "prof_gender":"M",
+           "prof_bio": "idiot",
+           "prof_dob": "1981-01-05",
+           "prof_image_loc":null,
+           "prof_edu_fac": null,
+           "prof_qualification": null,
+           "prof_grad_year": null,
+           "prof_is_grad": false
+           
+    }

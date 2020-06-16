@@ -132,9 +132,10 @@ const storage = multer.diskStorage({
         console.log(req.body.file_name);
         
         const media = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[req.body.file_name])
+        console.log(media[0]);
         
         
-        if (media[0]){ 
+        if (!media[0]){ 
             req.body.file_name = null
             return cb('No file added', 'media/images')
         }
@@ -179,10 +180,15 @@ router.post('/addmedia',[middleware.verify], async (req,res)=>{
         const media_name = `${proj_id}_${media_title}_${String(media.med_position)}_${date_formatted}`
         media['med_location'] = 'media/images'
         //insert into data base
+        const media_name_check = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[media_name])
+        if(media_name_check[0]) return res.status(400).send("Name for image already exists in project");
+
         const create_media = await conn(`INSERT INTO KRONOS.MEDIA (med_name,med_location, med_title, med_descp, med_type, med_position, med_proj_id,med_created_on) 
         VALUES(?,?,?,?,?,?,?,?);`,[media_name,media.med_location,media.med_title, media.med_descp, media.med_type, media.med_position, media.med_proj_id,today_date()])
-        res.json({proj_id: proj_id,file_name: media_name})
+        
     })
+    const media_name = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_proj_id = ?',[req.body.proj_id])
+    res.json({proj_id: req.body.proj_id,file_name: media_name})
     
     
 })
@@ -196,24 +202,39 @@ router.post('/addmedia/image',[middleware.verify, middleware.imageUpload],(req,r
 
 
 // get from the media table
-router.get('/media',verify ,async (req,res)=>{
-    console.log(req.user);
+router.get('/:id/media',verify ,async (req,res)=>{
     
     if (!req.user) return res.status(400).send('No user found')
     const prof = await profile(req.user._id)
     if (!prof) return res.status(400).send('No Profile for user')
     //const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
     //if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
-
-    const proj_id = await conn('SELECT proj_id FROM KRONOS.PROJECT WHERE proj_prof_id = ?',[req.user._id])
-    if(!proj_id) return res.status(400).send('No projects found')
+    
+    const proj_id = await conn(`SELECT * FROM KRONOS.MEDIA M INNER JOIN KRONOS.PROJECT P ON M.MED_PROJ_ID = P.PROJ_ID WHERE PROJ_ID = ${req.params.id} AND proj_prof_id = ${req.user._id};`)
+    if(!proj_id[0]) return res.status(400).send('No Media with Project ID:'+req.params.id)
 
     const get_media = await conn('SELECT *  FROM KRONOS.MEDIA WHERE med_proj_id = ?',[proj_id[0].proj_id])
-    if(!get_media) return res.status(400).send('No media found')
-
+    if(!get_media[0]) return res.status(400).send('No media found')
+    
     //multer
 
     res.json(get_media)
+})
+
+router.get('/search/:term',async (req,res)=>{
+    try {
+    let search_term = req.params.term 
+    search_term = search_term.replace(/[^\w\s]/gi, '')
+
+    const search = await conn(`SELECT * FROM KRONOS.PROJECT WHERE proj_name like '%${search_term}%' or proj_bio like '%${search_term}%' `)
+    if(!search[0]) return res.json({search:'No projects found with term: ' + search_term})
+    res.json(search)
+    } catch (error) {
+        res.send('Invalid search')
+        console.log(error);
+        
+    }
+
 })
 
 module.exports = router
