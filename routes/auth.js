@@ -24,8 +24,8 @@ router.post('/signup', async (req,res)=>{
     
     // Adding database users
     try {
-       const inser_user = await conn('INSERT INTO KRONOS.USER (usr_email, usr_hash, usr_created_on) VALUES(?,?,CURRENT_TIMESTAMP());',
-       [req.body.usr_email,hashpass])
+       const inser_user = await conn('INSERT INTO KRONOS.USER (usr_email, usr_hash, usr_created_on, usr_active) VALUES(?,?,CURRENT_TIMESTAMP(),?);',
+       [req.body.usr_email,hashpass,true])
         const user = await conn('SELECT usr_id, usr_email FROM KRONOS.USER WHERE usr_email = ?',[req.body.usr_email])
 
         const inser_profile = await conn(`INSERT INTO KRONOS.PROFILE (
@@ -41,8 +41,9 @@ router.post('/signup', async (req,res)=>{
             prof_grad_year,
             prof_is_grad,
             prof_created_on,
-            prof_usr_id) 
-            VALUES(?,?,?,?,?, ?, ?,?,?,?,?,CURRENT_TIMESTAMP(),?)`,
+            prof_usr_id,
+            prof_active) 
+            VALUES(?,?,?,?,?, ?, ?,?,?,?,?,CURRENT_TIMESTAMP(),?,?)`,
             [
                 req.body.prof_firstname,
                 req.body.prof_lastname,
@@ -55,9 +56,11 @@ router.post('/signup', async (req,res)=>{
                 req.body.prof_qualification,
                 req.body.prof_grad_year,
                 req.body.prof_is_grad,
-                user[0].usr_id
+                user[0].usr_id,
+                true
 
              ])
+             
         status = {
             success:true,
             msg:`Successfully created user ${req.body.prof_firstname}`

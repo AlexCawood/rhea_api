@@ -105,3 +105,6 @@ http://localhost:5000/api/profile/edit/:proj_id
            "prof_is_grad": false
            
     }
+// returns a list of changes made
+
+// Edit Project

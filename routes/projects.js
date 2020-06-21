@@ -35,13 +35,14 @@ router.post('/addproject',verify ,async (req,res)=>{
         const date = today_date()
         
         const insert_project = await conn(`
-        INSERT INTO KRONOS.PROJECT (proj_name,proj_bio, proj_created_on, proj_prof_id)
-        VALUES(?,?,?,?)
+        INSERT INTO KRONOS.PROJECT (proj_name,proj_bio, proj_created_on, proj_prof_id, proj_active)
+        VALUES(?,?,?,?,?)
         `,[
             req.body.proj_name,
             req.body.proj_bio,
             date,
-            prof[0].prof_id
+            prof[0].prof_id,
+            true
         ])
         project_id = await conn("SELECT proj_id FROM KRONOS.PROJECT WHERE proj_name = ? and proj_prof_id = ? and proj_created_on = ? ",[req.body.proj_name,prof[0].prof_id,date])
         res.json( project_id[0]);
@@ -58,7 +59,7 @@ router.post('/addproject',verify ,async (req,res)=>{
 // Get user poject data
 router.get('/all',verify, async (req,res) =>{
     const prof = await profile(req.user._id)
-    if (!prof) return res.status(400).send('No Profile for user')
+    if (!prof[0]) return res.status(400).send('No Profile for user')
     const projects = await conn('SELECT * FROM KRONOS.PROJECT WHERE proj_prof_id = ?',[prof[0].prof_id])
     if(!projects) return res.status(400).send('No projects found')
 
@@ -101,7 +102,7 @@ router.post('/addtags',verify, async (req,res)=>{
             const {error} = tagVal({"tag_name":req.body[tag]})
             if (error) return res.status(400).send(error.details[0].message + `, The failed tag is ${req.body[tag]}`)
             //Create Tag in tag table
-            const create_tag = await conn('INSERT INTO KRONOS.TAG (tag_name,tag_proj_id) VALUES(?, ?);',[req.body[tag],req.body.tag_proj_id])
+            const create_tag = await conn('INSERT INTO KRONOS.TAG (tag_name,tag_proj_id, tag_active) VALUES(?, ?, ?);',[req.body[tag],req.body.tag_proj_id,true])
         }
 
     })
@@ -183,8 +184,8 @@ router.post('/addmedia',[middleware.verify], async (req,res)=>{
         const media_name_check = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[media_name])
         if(media_name_check[0]) return res.status(400).send("Name for image already exists in project");
 
-        const create_media = await conn(`INSERT INTO KRONOS.MEDIA (med_name,med_location, med_title, med_descp, med_type, med_position, med_proj_id,med_created_on) 
-        VALUES(?,?,?,?,?,?,?,?);`,[media_name,media.med_location,media.med_title, media.med_descp, media.med_type, media.med_position, media.med_proj_id,today_date()])
+        const create_media = await conn(`INSERT INTO KRONOS.MEDIA (med_name,med_location, med_title, med_descp, med_type, med_position, med_proj_id,med_created_on,med_active) 
+        VALUES(?,?,?,?,?,?,?,?,?);`,[media_name,media.med_location,media.med_title, media.med_descp, media.med_type, media.med_position, media.med_proj_id,today_date(),true])
         
     })
     const media_name = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_proj_id = ?',[req.body.proj_id])
@@ -221,6 +222,7 @@ router.get('/:id/media',verify ,async (req,res)=>{
     res.json(get_media)
 })
 
+//search terms -- check for sql inject vulrablilities
 router.get('/search/:term',async (req,res)=>{
     try {
     let search_term = req.params.term 
@@ -236,5 +238,94 @@ router.get('/search/:term',async (req,res)=>{
     }
 
 })
+
+
+// Edit Project
+router.put('/:id/edit',verify ,async (req,res)=>{
+    console.log('this running?');
+    
+    if (!req.user) return res.status(400).send('No user found')
+    const prof = await profile(req.user._id)
+    if (!req.body) return res.status(400).send('No data')
+    let proj_update={}
+    Object.keys(req.body).forEach(async key =>{
+        if (req.body[key] && key != 'proj_id' && key != 'proj_prof_id'){
+            proj_update[key] = req.body[key]
+            const update_proj = await conn(`UPDATE KRONOS.PROJECT SET ${key} = "${req.body[key]}" where proj_id = ${req.params.id} AND proj_prof_id = ${prof[0].prof_id};`)
+        }
+    })
+
+    res.send(proj_update)
+})
+
+router.delete('/:id/edit/tag',verify , async (req,res)=>{
+
+    if (!req.user) return res.status(400).send('No user found')
+    const prof = await profile(req.user._id)
+    if (!req.body) return res.status(400).send('No data')
+    let tag_delete = {}
+    Object.keys(req.body).forEach(async key =>{
+        if (key != 'tag_proj_id'){
+            tag_delete[key] = req.body[key]
+            const update_tag = await conn(`UPDATE KRONOS.TAG SET tag_active = false WHERE tag_proj_id = ${req.params.id} AND tag_name = "${req.body[key]}";`)
+        }
+    })
+    res.send(tag_delete)
+})
+
+router.put('/:id/edit/media',verify , async (req,res)=>{
+    
+    if (!req.user) return res.status(400).send('No user found')
+    const prof = await profile(req.user._id)
+    if (!req.body) return res.status(400).send('No data')
+    let media_update = {}
+    
+    
+    const media_list = req.body.med_media
+
+    media_list.map(async (media)=>{
+
+        //const {error} = mediaVal(media)
+        //if (error) return res.status(400).send(error.details[0].message + `, The failed media is ${media.med_title}`)
+
+        if (media['med_id']){
+        Object.keys(media).forEach(async key =>{
+            const media_update = await conn('SELECT * FROM KRONOS.MEDIA WHERE med_id = ? AND med_proj_id = ?',
+                [media.med_id, media.med_proj_id])
+            if(!media_update[0]) return res.status(400).send('No Media found')
+
+            if (key != 'med_id' || key != 'med_proj_id'){
+                    media_update[key] = media[key]
+                    const update_media = await conn(`UPDATE KRONOS.MEDIA SET ${key} = ? WHERE med_proj_id = ? AND med_id = ?;`,
+                    [media[key], req.params.id, media['med_id']])
+                    
+                }       
+        
+            })
+        } 
+
+    })
+    
+    res.send(media_update)
+})
+
+router.delete('/:id/rem/media', verify, async (req,res) =>{
+
+    if (!req.user) return res.status(400).send('No user found')
+    const prof = await profile(req.user._id)
+    if (!req.body) return res.status(400).send('No data')
+    // check project exists
+    const media_delete_dic = await conn('SELECT * FROM KRONOS.MEDIA WHERE med_id = ? AND med_proj_id = ?',
+    [req.body.med_id, req.body.med_proj_id])
+    
+    if(!media_delete_dic[0]) return res.status(400).send('No Media found')
+
+    const media_delete = await conn('UPDATE KRONOS.MEDIA SET med_active = false WHERE med_proj_id = ? AND med_id = ?;',
+        [req.body.med_proj_id,req.body.med_id])
+
+    res.send(media_delete_dic[0])
+})
+
+
 
 module.exports = router
