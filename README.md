@@ -1,4 +1,4 @@
-# rhea_api
+# Rhea Api
 
 ## API calls
 
