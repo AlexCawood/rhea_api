@@ -10,7 +10,7 @@ http://localhost:3000/api/auth/signup
 
 ```
 {
-	"prof_firstname":"fred",
+	    "prof_firstname":"fred",
 	   "prof_lastname": "manson",
 	   "usr_email": "fred@Yahoo.com",
 	   "prof_gender":"M",
@@ -40,6 +40,8 @@ http://localhost:3000/api/auth/signin
 
 ### Get profile data
 get request
+http://localhost:5000/api/profile/
+
 
 ### Edit Profile:
 put request
@@ -92,6 +94,23 @@ http://localhost:3000/api/project/:id
 put request
 http://localhost:3000/api/project/:id/edit
 
+```
+    {
+        "prof_firstname":"fred",
+           "prof_lastname": "manson",
+           "prof_gender":"M",
+           "prof_bio": "idiot",
+           "prof_dob": "1981-01-05",
+           "prof_image_loc":null,
+           "prof_edu_fac": null,
+           "prof_qualification": null,
+           "prof_grad_year": null,
+           "prof_is_grad": false
+           
+    }
+
+```
+
 ### Search Projects
 get Request
 http://localhost:5000/api/project/search/:searchterm
@@ -117,6 +136,14 @@ http://localhost:3000/api/project/tags/:proj_id
 
 ### Deactivate tag
 http://localhost:3000/api/project/:id/edit/tag
+
+```
+{
+    "tag_name_2": "awesome",
+    "tag_name_3": "radical"
+}
+
+```
 
 ### Create Media
 Post request
@@ -164,9 +191,33 @@ http://localhost:5000/api/project/:id/media
 put request
 http://localhost:5000/api/project/:id/edit/media
 
+```
+{
+    "proj_id": 13,
+    "med_media": [
+        {
+            "med_id":"19",
+            "med_location": null,
+            "med_title": null,
+            "med_descp": "One bad ass pic",
+            "med_type": null,
+            "med_position": 1,
+            "med_proj_id": 13
+        }
+    ]
+}
+```
+
 ### Delete Media
 Delete request
 http://localhost:5000/api/project/:id/rem/media
 
+```
+
+{
+            "med_id":"1",
+            "med_proj_id": 13
+}
+```
 
 
