@@ -1,7 +1,7 @@
 const router = require('express').Router()
 const Joi = require('joi')
 const jwt = require('jsonwebtoken')
-
+const verify = require('../verifyToken')
 const conn = require('../database')
 const bcrypt = require('bcryptjs')
 const {signupVal, loginVal} = require('../validation/authVal')
@@ -105,5 +105,7 @@ router.post('/signin', async (req,res) =>{
     }
    
 })
+
+
 
 module.exports = router
