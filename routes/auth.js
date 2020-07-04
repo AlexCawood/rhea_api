@@ -16,7 +16,7 @@ router.post('/signup', async (req,res)=>{
     
     //Check if email exists
     const user_count = await conn('SELECT COUNT(usr_email) AS user_count FROM KRONOS.USER WHERE usr_email = ?',[req.body.usr_email])
-    if (parseInt(user_count[0].user_count) >0 ) return res.status(400).send('User already exists')
+    if (parseInt(user_count[0].user_count) >0 ) return res.status(400).json({success:false,error:'email',msg:`User was not created`})
 
     //Hashing
     const salt = await bcrypt.genSalt(10)
