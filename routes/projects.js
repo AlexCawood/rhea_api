@@ -13,6 +13,7 @@ const today_date = ()=>{
     today = `${yyyy}-${mm}-${dd}`;
     return today
 }
+
 // Check profile exists
 const profile = async (id) =>{
     const user = await conn('SELECT * FROM KRONOS.USER WHERE usr_id = ?',[id])
@@ -52,10 +53,9 @@ router.post('/addproject',verify ,async (req,res)=>{
         console.log(error);
         
     }
-    
-
-
 })
+
+
 // Get user poject data
 router.get('/all',verify, async (req,res) =>{
     const prof = await profile(req.user._id)
@@ -76,12 +76,24 @@ router.get('/:id',verify, async (req,res) =>{
     res.json(projects)
 })
 
+// deativate project
+router.delete('/:id',verify, async (req,res)=>{
+    console.log(req.params.id)
+    console.log(req.user._id)
+    const prof = await profile(req.user._id)
+    if (!prof) return res.status(400).send('No Profile for user')
+    const update_projects = await conn('UPDATE KRONOS.PROJECT SET proj_active = false WHERE proj_id = ?',[req.params.id])
+    const projects = await conn('SELECT * FROM KRONOS.PROJECT WHERE proj_id = ? AND proj_atcive = false' ,[req.params.id])
+    if(!projects[0]) return res.status(400).send('No projects found')
+
+    res.json({"status":true})
+})
+
 // get all projects
 router.get('/', async (req,res) =>{
     
     const projects = await conn('SELECT * FROM KRONOS.PROJECT')
     if(!projects) return res.status(400).send('No projects found')
-
     res.json(projects)
 })
 
@@ -325,6 +337,9 @@ router.delete('/:id/rem/media', verify, async (req,res) =>{
 
     res.send(media_delete_dic[0])
 })
+
+
+
 
 
 

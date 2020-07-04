@@ -63,6 +63,11 @@ http://localhost:5000/api/profile/edit/:proj_id
     }
 ```
 
+### Deactivate Profile
+delete request
+http://localhost:3000/api/profile/
+
+
 ## Project API calls
 
 ### Create Project 
@@ -117,6 +122,7 @@ http://localhost:5000/api/project/search/:searchterm
 
 ### Deactivate project
 delete request
+http://localhost:3000/api/project/:id
 
 ### Create Tags
 Post request
@@ -135,6 +141,7 @@ Get request
 http://localhost:3000/api/project/tags/:proj_id
 
 ### Deactivate tag
+Delete request
 http://localhost:3000/api/project/:id/edit/tag
 
 ```

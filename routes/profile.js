@@ -11,7 +11,7 @@ const profile = async (id) =>{
 }
 
 router.get('/',verify,async (req,res)=>{
-    const profile = await conn('SELECT * FROM KRONOS.PROFILE WHERE prof_usr_id = ?',[req.user._id])
+    const profile = await conn('SELECT * FROM KRONOS.PROFILE WHERE prof_usr_id = ? AND prof_active = true',[req.user._id])
     if (!profile) return res.status(400).send('Profile not found')
     res.json(profile)
 })
@@ -89,6 +89,14 @@ router.put('/edit/:id', verify, async (req,res)=>{
     }
     
 
+})
+
+router.delete('/',verify,async (req,res)=>{
+    const del_profile = await conn('UPDATE KRONOS.PROFILE SET prof_active = false WHERE prof_usr_id = ?',[req.user._id])
+    const profile = await conn('SELECT * FROM KRONOS.PROFILE WHERE prof_usr_id = ? AND prof_active = false',[req.user._id])
+    const del_usr = await conn('UPDATE KRONOS.USER SET usr_active = false WHERE usr_id = ?',[profile[0].prof_usr_id])
+    
+    res.json({"status":true})
 })
 
 module.exports = router
