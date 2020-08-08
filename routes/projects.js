@@ -198,7 +198,7 @@ router.post('/addmedia',[middleware.verify], async (req,res)=>{
         let date_formatted = today_date().replace(/-/g, "")
         const media_name = `${proj_id}_${media_title}_${String(media.med_position)}_${date_formatted}`
         media['med_location'] = 'media/images'
-        med_name_obj.file_name.push({media_title:media.med_title,media_position:media.med_position,file_name:media_name});
+        med_name_obj.media.push({media_title:media.med_title,media_position:media.med_position,file_name:media_name});
         //insert into data base
         const media_name_check = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[media_name])
         if(media_name_check[0]) return res.status(400).send("Name for image already exists in project");
