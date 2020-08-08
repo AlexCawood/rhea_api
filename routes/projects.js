@@ -175,11 +175,16 @@ router.post('/addmedia',[middleware.verify], async (req,res)=>{
     const check_proj_exists = await conn('SELECT COUNT(*) AS proj_count FROM KRONOS.PROJECT WHERE proj_id = ?',[req.body.proj_id])
     if (check_proj_exists[0].proj_count === 0) return res.status(400).send('project does not exist')
 
+    let med_name_obj = {
+        proj_id:req.body.proj_id,
+        file_name:[]
+    };
     // media data 
     const media_list = req.body.med_media
 
     media_list.map(async (media)=>{
-        console.log(media);
+        
+        
         
         const {error} = mediaVal(media)
         if (error) return res.status(400).send(error.details[0].message + `, The failed media is ${media.med_title}`)
@@ -193,6 +198,7 @@ router.post('/addmedia',[middleware.verify], async (req,res)=>{
         let date_formatted = today_date().replace(/-/g, "")
         const media_name = `${proj_id}_${media_title}_${String(media.med_position)}_${date_formatted}`
         media['med_location'] = 'media/images'
+        med_name_obj.file_name.push({media_title:media.med_title,media_position:media.med_position,file_name:media_name});
         //insert into data base
         const media_name_check = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[media_name])
         if(media_name_check[0]) return res.status(400).send("Name for image already exists in project");
@@ -201,8 +207,8 @@ router.post('/addmedia',[middleware.verify], async (req,res)=>{
         VALUES(?,?,?,?,?,?,?,?,?);`,[media_name,media.med_location,media.med_title, media.med_descp, media.med_type, media.med_position, media.med_proj_id,today_date(),true])
         
     })
-    const media_name = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_proj_id = ?',[req.body.proj_id])
-    res.json({proj_id: req.body.proj_id,file_name: media_name})
+    //const media_name = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_proj_id = ?',[req.body.proj_id])
+    res.json(med_name_obj)
     
     
 })
