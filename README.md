@@ -99,22 +99,16 @@ http://localhost:3000/api/project/:id
 put request
 http://localhost:3000/api/project/:id/edit
 
-```
-    {
-        "prof_firstname":"fred",
-           "prof_lastname": "manson",
-           "prof_gender":"M",
-           "prof_bio": "idiot",
-           "prof_dob": "1981-01-05",
-           "prof_image_loc":null,
-           "prof_edu_fac": null,
-           "prof_qualification": null,
-           "prof_grad_year": null,
-           "prof_is_grad": false
-           
-    }
+Edit details of the project that has already been created. 
 
-```
+Must send project ID and the project profile ID to the backend. Then can send name of field to edit as the key and the edit of that field as its value.
+
+{
+    "proj_id":"13",
+	"proj_name":"Kell's 13",
+	"proj_bio":"Something something pokemon",
+	"proj_prof_id":4
+}
 
 ### Search Projects
 get Request
@@ -156,6 +150,8 @@ http://localhost:3000/api/project/:id/edit/tag
 Post request
 http://localhost:3000/api/project/addmedia
 
+Creating the meta data for the image. This meta data is used when uploading an image.
+
 ```
 {
     "proj_id": 10,
@@ -184,7 +180,7 @@ http://localhost:3000/api/project/addmedia
 Form Post request
 http://localhost:5000/api/project/addmedia/image
 
-has to be a form request. submit a form request for each image
+has to be a form request. submit a form request for each image.
 
 	- proj_id
 	- file_name

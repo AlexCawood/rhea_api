@@ -36,14 +36,15 @@ router.post('/addproject',verify ,async (req,res)=>{
         const date = today_date()
         
         const insert_project = await conn(`
-        INSERT INTO KRONOS.PROJECT (proj_name,proj_bio, proj_created_on, proj_prof_id, proj_active)
-        VALUES(?,?,?,?,?)
+        INSERT INTO KRONOS.PROJECT (proj_name,proj_bio, proj_created_on, proj_prof_id, proj_active,template_id)
+        VALUES(?,?,?,?,?,?)
         `,[
             req.body.proj_name,
             req.body.proj_bio,
             date,
             prof[0].prof_id,
-            true
+            true,
+            req.body.template_id
         ])
         project_id = await conn("SELECT proj_id FROM KRONOS.PROJECT WHERE proj_name = ? and proj_prof_id = ? and proj_created_on = ? ",[req.body.proj_name,prof[0].prof_id,date])
         res.json( project_id[0]);
@@ -145,7 +146,7 @@ const storage = multer.diskStorage({
         console.log(req.body.file_name);
         
         const media = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[req.body.file_name])
-        console.log(media[0]);
+        //console.log(media[0]);
         
         
         if (!media[0]){ 
