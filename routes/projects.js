@@ -177,7 +177,7 @@ router.post('/addmedia',[middleware.verify], async (req,res)=>{
 
     let med_name_obj = {
         proj_id:req.body.proj_id,
-        file_name:[]
+        media:[]
     };
     // media data 
     const media_list = req.body.med_media
