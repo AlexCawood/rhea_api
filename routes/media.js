@@ -58,7 +58,7 @@ const storage = multer.diskStorage({
     verify: verify,
     imageUpload: upload.single('image')
 }
-
+// Add media, 
   router.post('/addmedia',[middleware.verify], async (req,res)=>{
 
     // gaurd for user exists
@@ -152,7 +152,8 @@ router.get('/:id/:med_id',verify ,async (req,res)=>{
     res.sendFile(__dirname +file_loc)
 })
 
-router.put('/:id/edit/media',verify , async (req,res)=>{
+// edit media, change a media entry by parsing the project id and the media id 
+router.put('/:id',verify , async (req,res)=>{
     
     if (!req.user) return res.status(400).send('No user found')
     const prof = await profile(req.user._id)
@@ -187,8 +188,8 @@ router.put('/:id/edit/media',verify , async (req,res)=>{
     
     res.send(media_update)
 })
-
-router.delete('/:id/rem/media', verify, async (req,res) =>{
+// delete based on project id, parse an object with the poject id and media id to be deleted
+router.delete('/:id', verify, async (req,res) =>{
 
     if (!req.user) return res.status(400).send('No user found')
     const prof = await profile(req.user._id)

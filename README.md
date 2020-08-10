@@ -148,7 +148,7 @@ http://localhost:3000/api/project/:id/edit/tag
 
 ### Create Media
 Post request
-http://localhost:3000/api/project/addmedia
+http://localhost:3000/api/media/addmedia
 
 Creating the meta data for the image. This meta data is used when uploading an image.
 
@@ -178,25 +178,29 @@ Creating the meta data for the image. This meta data is used when uploading an i
 
 ### Add image 
 Form Post request
-http://localhost:5000/api/project/addmedia/image
+http://localhost:3000/api/media/addmedia/image
 
 has to be a form request. submit a form request for each image.
 
 	- proj_id
 	- file_name
-	- image
+	- image **this is a file uploaded through the browser**
 
 ### Get Media
-Get request
-http://localhost:5000/api/project/:id/media
+Get request, Id is the project ID
+http://localhost:3000/api/media/:id
+
+### Get Image
+Get request, id is the project ID and med_id is the media ID
+http://localhost:3000/api/media/:id/:med_id
 
 ### Edit Media
-put request
-http://localhost:5000/api/project/:id/edit/media
+put request, id is the project ID
+http://localhost:3000/api/media/:id
 
 ```
 {
-    "proj_id": 13,
+    "proj_id": 16,
     "med_media": [
         {
             "med_id":"19",
@@ -211,9 +215,13 @@ http://localhost:5000/api/project/:id/edit/media
 }
 ```
 
+
+
 ### Delete Media
-Delete request
-http://localhost:5000/api/project/:id/rem/media
+Delete request. id is the project ID
+http://localhost:3000/api/media/:id
+
+need to pass the media ID to delete and the project id
 
 ```
 
