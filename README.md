@@ -47,7 +47,9 @@ Forum Post request
 http://localhost:3000/api/profile/
 
 -prof_id
+
 -file_name (this should be the users email address)
+
 -image
 
 
