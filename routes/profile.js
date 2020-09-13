@@ -1,6 +1,8 @@
 const router = require('express').Router()
 const conn = require('../database')
 const verify = require('../verifyToken')
+const { route } = require('./media')
+const multer = require('multer')
 
 const profile = async (id) =>{
     const user = await conn('SELECT * FROM KRONOS.USER WHERE usr_id = ?',[id])
@@ -98,5 +100,58 @@ router.delete('/',verify,async (req,res)=>{
     
     res.json({"status":true})
 })
+
+
+// Adding a profile picture:
+
+const imageFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith("image")) {
+      cb(null, true);
+    } else {
+      cb("Please upload only images.", false);
+    }
+  };
+
+
+const storage = multer.diskStorage({
+    destination: async function  (req, file, cb) {
+        //console.log(req.body.file_name);
+        
+        //const media = await conn('SELECT PROF_IMAGE_LOC FROM KRONOS.MEDIA WHERE PROF_USR_EMAIL = ?',[req.body.file_name])
+        //console.log(media[0]);
+        
+        
+        // if (!media[0]){ 
+        //     req.body.file_name = null
+        //     return cb('No file added', 'media/images')
+        // }
+        cb(null, 'routes/media/profileImage')
+    },
+    filename: async function (req, file, cb) {
+        let image_name = req.body.file_name.replace('@','');
+        image_name = image_name.replace('\.','');
+        console.log(image_name);
+        const image_loc = `routes/media/profileImage/${image_name}.jpg`
+        const update_profile_loc = await conn('UPDATE KRONOS.PROFILE SET PROF_IMAGE_LOC = ? WHERE PROF_ID = ? ', [image_loc, req.body.prof_id])
+        cb(null, `${image_name}.jpg`)
+    }
+  })
+
+  const upload = multer({ storage: storage,
+    imageFilter:imageFilter })
+
+  let middleware = {
+    verify: verify,
+    imageUpload: upload.single('image')
+}
+
+router.post('/', [middleware.verify,middleware.imageUpload], async (req,res)=>{
+    if (!req.body.prof_id) return res.status(400).send('no profile ID submited')
+    if (!req.body.file_name) return res.status(400).send('no image name submited')
+    //console.log(req.file);
+    if (!req.file) return res.status(400).send('no image submited')
+    res.send("Image saved")
+})
+
 
 module.exports = router

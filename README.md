@@ -42,6 +42,14 @@ http://localhost:3000/api/auth/signin
 get request
 http://localhost:5000/api/profile/
 
+### Add profile picture:
+Forum Post request
+http://localhost:3000/api/profile/
+
+-prof_id
+-file_name (this should be the users email address)
+-image
+
 
 ### Edit Profile:
 put request

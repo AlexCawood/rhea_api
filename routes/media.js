@@ -34,10 +34,10 @@ const imageFilter = (req, file, cb) => {
 
 const storage = multer.diskStorage({
     destination: async function  (req, file, cb) {
-        console.log(req.body.file_name);
+        //console.log(req.body.file_name);
         
         const media = await conn('SELECT med_name FROM KRONOS.MEDIA WHERE med_name = ?',[req.body.file_name])
-        //console.log(media[0]);
+        console.log(media[0]);
         
         
         if (!media[0]){ 
