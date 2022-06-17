@@ -11,7 +11,7 @@ const {signupVal, loginVal} = require('../validation/authVal')
 router.post('/signup', async (req,res)=>{
     // Validations
     const {error} = signupVal(req.body)
-
+    
     if (error) return res.status(400).send(error.details[0].message)
     
     //Check if email exists
@@ -79,6 +79,7 @@ router.post('/signup', async (req,res)=>{
 
 router.post('/signin', async (req,res) =>{
     // Validation
+    //console.log(req.body)
     const {error} = loginVal(req.body)
     if (error) return res.status(400).send(error.details[0].message)
 

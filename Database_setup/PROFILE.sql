@@ -1,0 +1,21 @@
+CREATE TABLE `PROFILE` (
+  `prof_id` int(11) NOT NULL AUTO_INCREMENT,
+  `prof_firstname` varchar(30) NOT NULL,
+  `prof_lastname` varchar(30) NOT NULL,
+  `prof_usr_email` varchar(60) NOT NULL,
+  `prof_bio` text,
+  `prof_gender` char(1) NOT NULL,
+  `prof_dob` date NOT NULL,
+  `prof_image_loc` varchar(255) DEFAULT NULL,
+  `prof_edu_fac` varchar(60) DEFAULT NULL,
+  `prof_qualification` varchar(60) DEFAULT NULL,
+  `prof_grad_year` date DEFAULT NULL,
+  `prof_is_grad` tinyint(1) DEFAULT NULL,
+  `prof_created_on` datetime NOT NULL,
+  `prof_usr_id` int(11) NOT NULL,
+  `prof_active` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`prof_id`),
+  UNIQUE KEY `prof_id` (`prof_id`),
+  KEY `prof_usr_id` (`prof_usr_id`,`prof_usr_email`),
+  CONSTRAINT `PROFILE_ibfk_1` FOREIGN KEY (`prof_usr_id`, `prof_usr_email`) REFERENCES `USER` (`usr_id`, `usr_email`) ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=latin1
